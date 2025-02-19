@@ -86,5 +86,17 @@ def submit_response():
 
     return jsonify(success=True, message="Thanks for supporting! Your response has been recorded.")
 
+
+@app.route('/get_responses', methods=['GET'])
+def get_responses():
+    if not os.path.exists(RESPONSES_CSV):
+        return jsonify({"error": "No responses recorded yet!"}), 404
+
+    with open(RESPONSES_CSV, "r") as f:
+        lines = f.readlines()
+
+    return jsonify({"responses": lines})
+
+
 if __name__ == '__main__':
     app.run(debug=True)
