@@ -18,7 +18,7 @@ Session(app)  # Initialize session
 QUESTIONS_CSV = "https://docs.google.com/spreadsheets/d/1JOenZYvLKJcuwa7UJOle2BOkxaNT4gmnaGUeul-EiXA/export?format=csv"
 PATIENT_STATEMENTS_CSV = "https://docs.google.com/spreadsheets/d/1JQxfhJR_OcHvaSeYJw0CZLwJF5skOBvTstIhlsFufhk/export?format=csv"
 RESPONSES_CSV = "responses.csv"
-
+name = ""
 def ensure_csv_exists():
     if not os.path.isfile(RESPONSES_CSV):
         with open(RESPONSES_CSV, "w", newline='') as f:
@@ -75,17 +75,15 @@ def get_questions():
 
 @app.route('/submit_response', methods=['POST'])
 def submit_response():
-    if "current_user" not in session:
-        return jsonify(success=False, message="User not set!"), 400
-
     data = request.json
+    name = data["name"]
     patient_statement = data["patient_statement"]
     category = data["category"]
     selected_question = data["selected_question"]
 
     with open(RESPONSES_CSV, "a", newline='') as f:
         writer = csv.writer(f)
-        writer.writerow([session["current_user"], patient_statement, category, selected_question])
+        writer.writerow([name, patient_statement, category, selected_question])
 
     return jsonify(success=True, message="Thanks for supporting! Your response has been recorded.")
 
