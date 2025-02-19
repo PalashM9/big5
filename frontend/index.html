@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Big Five Personality Assessment</title>
+    <title>Webis Psych</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Skeleton Loader Animation */
@@ -23,27 +23,27 @@
 </head>
 <body class="bg-gray-100 flex justify-center items-center min-h-screen">
     <div id="welcomeScreen" class="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
-        <h1 class="text-2xl font-bold mb-4">Big Five Personality Assessment</h1>
+        <h1 class="text-2xl font-bold mb-4">Psych Bot Personality References</h1>
         <p class="text-gray-600 mb-6">Enter your name to begin:</p>
         <input type="text" id="name" class="w-full border p-2 rounded mb-4" placeholder="Enter your name">
         <button onclick="setUserName()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Start</button>
     </div>
 
     <div id="mainSurvey" class="hidden bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
-        <h1 class="text-2xl font-bold mb-4">Big Five Personality Assessment</h1>
+        <h1 class="text-2xl font-bold mb-4">Carefully review the patient's statement, identify the most relevant context category, and select the most appropriate follow-up question based on the patient's input.</h1>
         <p id="progress" class="text-gray-600 mb-6">Progress: <span id="progressCount">1</span> / <span id="totalQuestions"></span></p>
 
         <label class="block font-semibold mb-2">Patient Statement:</label>
         <div id="patientSkeleton" class="skeleton w-full h-10 mb-4"></div>
         <p id="patientStatement" class="bg-gray-200 p-3 rounded mb-4 hidden"></p>
 
-        <label class="block font-semibold mb-2 hidden" id="categoryLabel">Select a Personality Trait Category:</label>
+        <label class="block font-semibold mb-2 hidden" id="categoryLabel">Select the context category that best aligns with the patient's situation :</label>
         <div id="categorySkeleton" class="skeleton w-full h-10 mb-4"></div>
         <select id="category" class="w-full border p-2 rounded mb-4 hidden" onchange="fetchQuestions()">
             <option value="">Select a category</option>
         </select>
 
-        <label class="block font-semibold mb-2 hidden" id="questionLabel">Select a Relevant Question:</label>
+        <label class="block font-semibold mb-2 hidden" id="questionLabel">Select a relevant follow-up question that aligns with the patient's situation and provides deeper insight into their personality :</label>
         <div id="questionSkeleton" class="skeleton w-full h-10 mb-4"></div>
         <select id="question" class="w-full border p-2 rounded mb-4 hidden" required>
             <option value="">Select a question</option>

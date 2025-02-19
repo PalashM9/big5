@@ -1,13 +1,19 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, send_file
 import pandas as pd
 import csv
 import requests
 from io import StringIO
 import os
 from flask_cors import CORS
-app = Flask(__name__)
+from flask_session import Session  # Import Flask-Session
 
+app = Flask(__name__)
 CORS(app)
+
+# Configure session to use filesystem (instead of global variables)
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)  # Initialize session
 
 QUESTIONS_CSV = "https://docs.google.com/spreadsheets/d/1JOenZYvLKJcuwa7UJOle2BOkxaNT4gmnaGUeul-EiXA/export?format=csv"
 PATIENT_STATEMENTS_CSV = "https://docs.google.com/spreadsheets/d/1JQxfhJR_OcHvaSeYJw0CZLwJF5skOBvTstIhlsFufhk/export?format=csv"
@@ -20,8 +26,6 @@ def ensure_csv_exists():
             writer.writerow(["Name", "Patient Statement", "Category", "Selected Question"])
 
 ensure_csv_exists()
-current_user = None
-
 
 def load_data():
     questions_response = requests.get(QUESTIONS_CSV)
@@ -32,8 +36,6 @@ def load_data():
             questions_df = pd.read_csv(StringIO(questions_response.text))
             patient_df = pd.read_csv(StringIO(patient_response.text))
             print("CSV files loaded successfully.")
-            print(f"Questions DataFrame Shape: {questions_df.shape}")
-            print(f"Patient Statements DataFrame Shape: {patient_df.shape}")
             return questions_df, patient_df
         except Exception as e:
             print(f"Error loading CSV files: {e}")
@@ -54,10 +56,9 @@ def get_patient_statements():
 
 @app.route('/set_user', methods=['POST'])
 def set_user():
-    global current_user
     data = request.json
-    current_user = data.get("name")
-    return jsonify(success=True)
+    session["current_user"] = data.get("name")  # Store in session
+    return jsonify(success=True, message=f"User {session['current_user']} set successfully")
 
 @app.route('/get_categories', methods=['POST'])
 def get_categories():
@@ -74,7 +75,9 @@ def get_questions():
 
 @app.route('/submit_response', methods=['POST'])
 def submit_response():
-    global current_user
+    if "current_user" not in session:
+        return jsonify(success=False, message="User not set!"), 400
+
     data = request.json
     patient_statement = data["patient_statement"]
     category = data["category"]
@@ -82,10 +85,9 @@ def submit_response():
 
     with open(RESPONSES_CSV, "a", newline='') as f:
         writer = csv.writer(f)
-        writer.writerow([current_user, patient_statement, category, selected_question])
+        writer.writerow([session["current_user"], patient_statement, category, selected_question])
 
     return jsonify(success=True, message="Thanks for supporting! Your response has been recorded.")
-
 
 @app.route('/get_responses', methods=['GET'])
 def get_responses():
@@ -97,14 +99,11 @@ def get_responses():
 
     return jsonify({"responses": lines})
 
-from flask import send_file
-
 @app.route('/download_responses', methods=['GET'])
 def download_responses():
     if not os.path.exists(RESPONSES_CSV):
         return "No responses recorded yet!", 404
     return send_file(RESPONSES_CSV, as_attachment=True)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
