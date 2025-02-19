@@ -4,7 +4,10 @@ import csv
 import requests
 from io import StringIO
 import os
+from flask_cors import CORS
 app = Flask(__name__)
+
+CORS(app)
 
 QUESTIONS_CSV = "https://docs.google.com/spreadsheets/d/1JOenZYvLKJcuwa7UJOle2BOkxaNT4gmnaGUeul-EiXA/export?format=csv"
 PATIENT_STATEMENTS_CSV = "https://docs.google.com/spreadsheets/d/1JQxfhJR_OcHvaSeYJw0CZLwJF5skOBvTstIhlsFufhk/export?format=csv"
@@ -18,6 +21,7 @@ def ensure_csv_exists():
 
 ensure_csv_exists()
 current_user = None
+
 
 def load_data():
     questions_response = requests.get(QUESTIONS_CSV)
