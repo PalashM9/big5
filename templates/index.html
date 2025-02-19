@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big Five Personality Assessment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Skeleton Loader Animation */
+        .skeleton {
+            background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            height: 20px;
+            border-radius: 5px;
+        }
+        @keyframes loading {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 flex justify-center items-center min-h-screen">
+    <div id="welcomeScreen" class="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
+        <h1 class="text-2xl font-bold mb-4">Big Five Personality Assessment</h1>
+        <p class="text-gray-600 mb-6">Enter your name to begin:</p>
+        <input type="text" id="name" class="w-full border p-2 rounded mb-4" placeholder="Enter your name">
+        <button onclick="setUserName()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Start</button>
+    </div>
+
+    <div id="mainSurvey" class="hidden bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
+        <h1 class="text-2xl font-bold mb-4">Big Five Personality Assessment</h1>
+        <p id="progress" class="text-gray-600 mb-6">Progress: <span id="progressCount">1</span> / <span id="totalQuestions"></span></p>
+
+        <label class="block font-semibold mb-2">Patient Statement:</label>
+        <div id="patientSkeleton" class="skeleton w-full h-10 mb-4"></div>
+        <p id="patientStatement" class="bg-gray-200 p-3 rounded mb-4 hidden"></p>
+
+        <label class="block font-semibold mb-2 hidden" id="categoryLabel">Select a Personality Trait Category:</label>
+        <div id="categorySkeleton" class="skeleton w-full h-10 mb-4"></div>
+        <select id="category" class="w-full border p-2 rounded mb-4 hidden" onchange="fetchQuestions()">
+            <option value="">Select a category</option>
+        </select>
+
+        <label class="block font-semibold mb-2 hidden" id="questionLabel">Select a Relevant Question:</label>
+        <div id="questionSkeleton" class="skeleton w-full h-10 mb-4"></div>
+        <select id="question" class="w-full border p-2 rounded mb-4 hidden" required>
+            <option value="">Select a question</option>
+        </select>
+
+        <button onclick="submitResponse()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Next</button>
+    </div>
+
+    <div id="thankYou" class="hidden bg-white p-8 rounded-lg shadow-md w-full max-w-2xl text-center">
+        <h1 class="text-2xl font-bold mb-4">Thank You!</h1>
+        <p class="text-gray-600">Thanks for supporting this research. Your responses have been recorded.</p>
+        <div class="animate-bounce mt-4">🙏</div>
+    </div>
+
+    <script>
+        let patientStatements = [];
+        let currentIndex = 0;
+        let userName = "";
+
+        async function setUserName() {
+            userName = document.getElementById("name").value;
+            if (!userName) {
+                alert("Please enter your name");
+                return;
+            }
+            await fetch('/set_user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: userName })
+            });
+            document.getElementById("welcomeScreen").classList.add("hidden");
+            document.getElementById("mainSurvey").classList.remove("hidden");
+            loadPatientStatements();
+        }
+
+        async function loadPatientStatements() {
+            const response = await fetch('/get_patient_statements');
+            const data = await response.json();
+            patientStatements = data.patient_statements;
+            document.getElementById("totalQuestions").textContent = patientStatements.length;
+            updateStatement();
+        }
+
+        function updateStatement() {
+            if (currentIndex < patientStatements.length) {
+                // Show skeleton loaders and hide elements
+                document.getElementById("patientSkeleton").classList.remove("hidden");
+                document.getElementById("categorySkeleton").classList.remove("hidden");
+                document.getElementById("questionSkeleton").classList.remove("hidden");
+
+                document.getElementById("patientStatement").classList.add("hidden");
+                document.getElementById("categoryLabel").classList.add("hidden");
+                document.getElementById("category").classList.add("hidden");
+                document.getElementById("questionLabel").classList.add("hidden");
+                document.getElementById("question").classList.add("hidden");
+
+                setTimeout(() => {
+                    document.getElementById("patientSkeleton").classList.add("hidden");
+                    document.getElementById("patientStatement").classList.remove("hidden");
+                    document.getElementById("patientStatement").textContent = patientStatements[currentIndex];
+                    document.getElementById("progressCount").textContent = currentIndex + 1;
+                    fetchCategories();
+                }, 300);
+            } else {
+                document.getElementById("mainSurvey").classList.add("hidden");
+                document.getElementById("thankYou").classList.remove("hidden");
+            }
+        }
+
+        async function fetchCategories() {
+            const response = await fetch('/get_categories', { method: 'POST' });
+            const data = await response.json();
+            let categorySelect = document.getElementById("category");
+            categorySelect.innerHTML = '<option value="">Select a category</option>';
+            data.categories.forEach(category => {
+                let option = document.createElement("option");
+                option.value = category;
+                option.textContent = category;
+                categorySelect.appendChild(option);
+            });
+
+            setTimeout(() => {
+                document.getElementById("categorySkeleton").classList.add("hidden");
+                document.getElementById("categoryLabel").classList.remove("hidden");
+                categorySelect.classList.remove("hidden");
+            }, 1500);
+        }
+
+        async function fetchQuestions() {
+            let category = document.getElementById("category").value;
+            if (!category) return;
+            document.getElementById("questionSkeleton").classList.remove("hidden");
+            document.getElementById("question").classList.add("hidden");
+            document.getElementById("questionLabel").classList.add("hidden");
+
+            const response = await fetch('/get_questions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category })
+            });
+            const data = await response.json();
+            let questionSelect = document.getElementById("question");
+            questionSelect.innerHTML = '<option value="">Select a question</option>';
+            data.questions.forEach(question => {
+                let option = document.createElement("option");
+                option.value = question;
+                option.textContent = question;
+                questionSelect.appendChild(option);
+            });
+
+            setTimeout(() => {
+                document.getElementById("questionSkeleton").classList.add("hidden");
+                document.getElementById("questionLabel").classList.remove("hidden");
+                questionSelect.classList.remove("hidden");
+            }, 1500);
+        }
+
+        async function submitResponse() {
+            let category = document.getElementById("category").value;
+            let selectedQuestion = document.getElementById("question").value;
+            if (!category || !selectedQuestion) {
+                alert("Please select a category and a question before proceeding.");
+                return;
+            }
+            await fetch('/submit_response', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ patient_statement: patientStatements[currentIndex], category, selected_question: selectedQuestion })
+            });
+            currentIndex++;
+            updateStatement();
+        }
+    </script>
+</body>
+</html>
