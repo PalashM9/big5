@@ -97,6 +97,14 @@ def get_responses():
 
     return jsonify({"responses": lines})
 
+from flask import send_file
+
+@app.route('/download_responses', methods=['GET'])
+def download_responses():
+    if not os.path.exists(RESPONSES_CSV):
+        return "No responses recorded yet!", 404
+    return send_file(RESPONSES_CSV, as_attachment=True)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
