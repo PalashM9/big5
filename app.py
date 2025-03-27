@@ -27,7 +27,7 @@ SHEET_ID = "1HlcfTjowsy_z7C8sFJOHSpIBybhwllPVnM1Yjkfi_kE"
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 json_str = os.environ["GCP_SERVICE_ACCOUNT_JSON"]
 creds_dict = json.loads(json_str)
-creds = Credentials.from_service_account_file(creds_dict, scopes=SCOPES)
+creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
 service = build("sheets", "v4", credentials=creds)
 sheet = service.spreadsheets()
 
