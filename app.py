@@ -49,9 +49,9 @@ def load_data():
         print("Error: Unable to fetch CSV files from Google Sheets.")
         return pd.DataFrame(), pd.DataFrame()
 
-def append_to_google_sheet(name, patient_statement, category, selected_question, dropdown_time, response_time):
+def append_to_google_sheet(name, patient_statement, category, selected_question, dropdown_time, response_time, feedback):
     """Append a single response row to the Google Sheet."""
-    row_data = [[name, patient_statement, category, selected_question, dropdown_time, response_time]]
+    row_data = [[name, patient_statement, category, selected_question, dropdown_time, response_time, feedback]]
     body = {"values": row_data}
 
     result = sheet.values().append(
@@ -110,9 +110,10 @@ def submit_response():
     selected_question = data["selected_question"]
     dropdown_time = data.get("dropdown_time", "")
     response_time = data.get("response_time", "")
+    feedback = data.get("feedback", "")
 
     try:
-        append_to_google_sheet(name, patient_statement, category, selected_question, dropdown_time, response_time)
+        append_to_google_sheet(name, patient_statement, category, selected_question, dropdown_time, response_time, feedback)
         return jsonify(success=True, message="Response Submitted.")
     except Exception as e:
         return jsonify(success=False, message=f"Error writing to Google Sheets: {e}")
